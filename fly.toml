@@ -1,0 +1,25 @@
+app = "hopfan-library"
+primary_region = "jnb"   # Johannesburg — closest to Zimbabwe
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  DATABASE_URL = "file:/data/prod.db"
+  PORT = "3000"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"    # free tier: stop when idle
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+# Persistent volume — SQLite lives here across deploys
+[[mounts]]
+  source = "hopfan_data"
+  destination = "/data"
