@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: hopfan-library
+    runtime: node
+    plan: starter          # free tier — upgrade to "standard" for always-on
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma db push --skip-generate && npm start
+    healthCheckPath: /
+    disk:
+      name: hopfan-db
+      mountPath: /var/data  # SQLite file lives here, survives redeploys
+      sizeGB: 1
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/var/data/prod.db   # points to the persistent disk
+      - key: AUTH_SECRET
+        sync: false                     # set manually in Render dashboard
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: NEXTAUTH_URL
+        sync: false                     # set to your Render app URL e.g. https://hopfan-library.onrender.com
+      - key: BREVO_SMTP_USER
+        sync: false
+      - key: BREVO_SMTP_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: FINE_PER_DAY
+        value: "5"

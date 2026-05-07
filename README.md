@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HOPFAN Library
 
-## Getting Started
+A church library management system for **House of Prayer for All Nations (HOPFAN)**.
 
-First, run the development server:
+## Features
+
+- Book catalogue — add, edit, delete books with copy tracking
+- Member management — auto-generated member codes (`HOPFAN-XXXXX`)
+- Lending — borrow, return, renew, mark lost
+- Automatic fines for late returns (configurable R per day)
+- Email & SMS notifications — due reminders, overdue alerts, return confirmations
+- Admin dashboard with key stats
+- Secure login (JWT sessions)
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript, Tailwind CSS) |
+| Database | SQLite via Prisma 7 + `@prisma/adapter-better-sqlite3` |
+| Auth | NextAuth v5 (Credentials provider) |
+| Email | Nodemailer (SMTP) |
+| SMS | Twilio |
+
+---
+
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Edit `.env` with your values:
+
+```env
+DATABASE_URL="file:./prisma/dev.db"
+NEXTAUTH_SECRET="your-secret-here"
+NEXTAUTH_URL="http://localhost:3000"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+SMTP_FROM="HOPFAN Library <your-email@gmail.com>"
+TWILIO_ACCOUNT_SID="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+TWILIO_AUTH_TOKEN="your-auth-token"
+TWILIO_PHONE_NUMBER="+1234567890"
+FINE_PER_DAY="5"
+```
+
+### 3. Set up the database
+
+```bash
+npx prisma migrate dev --name init
+```
+
+### 4. Seed the default admin account
+
+```bash
+npx prisma db seed
+```
+
+Default credentials:
+- **Email**: `admin@hopfan.church`
+- **Password**: `Admin@123`
+
+### 5. Start development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Production Build
 
-## Learn More
+```bash
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+app/
+  api/           — REST API routes
+  dashboard/     — Admin UI pages (Books, Members, Loans, Notifications)
+  login/         — Login page
+lib/
+  auth.ts        — NextAuth configuration
+  prisma.ts      — Prisma client singleton
+  notifications.ts — Email & SMS helpers
+  utils.ts       — Fine calculator, member code generator
+prisma/
+  schema.prisma  — Database schema
+  seed.ts        — Seeds default admin
+  dev.db         — SQLite database (git-ignored)
+public/
+  hopfan-logo.PNG
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Switching to NeonDB (PostgreSQL)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `npm install @prisma/adapter-neon @neondatabase/serverless`
+2. Update `DATABASE_URL` to your Neon connection string
+3. Change datasource provider to `postgresql` in `prisma/schema.prisma`
+4. Update `lib/prisma.ts` to use `PrismaNeon` adapter
+5. Run `npx prisma migrate deploy`
+
+---
+
+## Notifications
+
+1. Go to **Notifications** in the sidebar
+2. Click **Check Status** to mark overdue loans and see who needs reminders
+3. Click **Send All Reminders** or notify individual loans from the Loans page
+
+SMS requires a valid Twilio account and E.164-formatted phone numbers on member records.

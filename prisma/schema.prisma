@@ -1,0 +1,115 @@
+// House of Prayer for all Nations — Library System
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Book {
+  id          String    @id @default(cuid())
+  title       String
+  author      String
+  isbn        String?   @unique
+  category    String?
+  description String?
+  totalCopies Int       @default(1)
+  available   Int       @default(1)
+  coverUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  loans       Loan[]
+}
+
+model Member {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?  @unique
+  phone           String?
+  address         String?
+  nextOfKin       String?
+  nextOfKinPhone  String?
+  memberCode      String   @unique
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  loans           Loan[]
+}
+
+model Loan {
+  id           String      @id @default(cuid())
+  bookId       String
+  memberId     String
+  borrowedAt   DateTime    @default(now())
+  dueDate      DateTime
+  returnedAt   DateTime?
+  status       LoanStatus  @default(ACTIVE)
+  renewalCount Int         @default(0)
+  fine         Float       @default(0)
+  finePaid     Boolean     @default(false)
+  notes        String?
+  book         Book        @relation(fields: [bookId], references: [id])
+  member       Member      @relation(fields: [memberId], references: [id])
+  notifications Notification[]
+  feedback     Feedback?
+}
+
+model Feedback {
+  id              String    @id @default(cuid())
+  loanId          String    @unique
+  token           String    @unique @default(cuid())
+  memberName      String
+  bookTitle       String
+  rating          Int?
+  review          String?
+  learnings       String?
+  wouldRecommend  Boolean?
+  submittedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  loan            Loan      @relation(fields: [loanId], references: [id])
+}
+
+model Notification {
+  id        String             @id @default(cuid())
+  loanId    String
+  type      NotificationType
+  channel   NotificationChannel
+  recipient String
+  message   String
+  sentAt    DateTime           @default(now())
+  success   Boolean            @default(true)
+  loan      Loan               @relation(fields: [loanId], references: [id])
+}
+
+enum LoanStatus {
+  ACTIVE
+  RETURNED
+  OVERDUE
+  LOST
+}
+
+enum NotificationType {
+  DUE_REMINDER
+  OVERDUE_ALERT
+  LOAN_CONFIRMATION
+  RETURN_CONFIRMATION
+  FEEDBACK_REQUEST
+  WELCOME
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+}
