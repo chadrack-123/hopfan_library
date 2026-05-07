@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: starter          # free tier — upgrade to "standard" for always-on
     buildCommand: npm install && npm run build
-    startCommand: npx prisma db push --skip-generate && npm start
+    startCommand: npx prisma db push --skip-generate && npx ts-node --esm prisma/seed.ts && npm start
     healthCheckPath: /
     disk:
       name: hopfan-db
