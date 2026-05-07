@@ -33,7 +33,7 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # Startup script
 COPY --from=builder /app/start.sh ./start.sh
-RUN chmod +x start.sh
+RUN sed -i 's/\r//' start.sh && chmod +x start.sh
 
 EXPOSE 3000
 
