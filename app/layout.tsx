@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "HOPFAN Library",
   description: "House of Prayer for all Nations — Library Management System",
+  icons: {
+    icon: "/hopfan-logo.PNG",
+    apple: "/hopfan-logo.PNG",
+  },
 };
 
 export default function RootLayout({
