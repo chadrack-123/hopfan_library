@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import Image from "next/image";
 import {
   BookOpenIcon,
   UsersIcon,
@@ -26,9 +27,23 @@ export default function Sidebar() {
 
   return (
     <aside className="fixed top-0 left-0 h-full w-56 bg-blue-900 text-white flex flex-col z-20">
-      <div className="px-5 py-6 border-b border-blue-800">
-        <p className="text-xs uppercase tracking-widest text-blue-300 mb-1">HOPFAN</p>
-        <h2 className="font-bold text-lg leading-tight">Library System</h2>
+      <div className="px-5 py-5 border-b border-blue-800 flex items-center gap-3">
+        <div
+          className="w-11 h-11 flex items-center justify-center rounded-full overflow-hidden bg-white flex-shrink-0"
+          style={{ boxShadow: "0 4px 18px 0 rgba(59,130,246,0.45), 0 1.5px 6px 0 rgba(0,0,0,0.18)" }}
+        >
+          <Image
+            src="/hopfan-logo.PNG"
+            alt="HOPFAN Logo"
+            width={40}
+            height={40}
+            className="object-contain w-full h-full"
+          />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-widest text-blue-300 leading-none mb-0.5">HOPFAN</p>
+          <h2 className="font-bold text-base leading-tight">Library System</h2>
+        </div>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
