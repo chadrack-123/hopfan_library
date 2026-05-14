@@ -1,25 +1,29 @@
-app = "hopfan-library"
-primary_region = "jnb"   # Johannesburg — closest to Zimbabwe
+# fly.toml app configuration file generated for hopfan-library on 2026-05-07T20:36:02+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'hopfan-library'
+primary_region = 'jnb'
 
 [build]
 
 [env]
-  NODE_ENV = "production"
-  DATABASE_URL = "file:/data/prod.db"
-  PORT = "3000"
+  DATABASE_URL = 'file:/data/prod.db'
+  NODE_ENV = 'production'
+  PORT = '3000'
+
+[[mounts]]
+  source = 'hopfan_data'
+  destination = '/data'
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = "stop"    # free tier: stop when idle
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "256mb"
-
-# Persistent volume — SQLite lives here across deploys
-[[mounts]]
-  source = "hopfan_data"
-  destination = "/data"
+  size = 'shared-cpu-1x'
+  memory = '256mb'

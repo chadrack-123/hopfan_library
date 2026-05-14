@@ -1,40 +1,47 @@
-# Stage 1: Install dependencies and build
-FROM node:20-alpine AS builder
-
-# better-sqlite3 needs native build tools
-RUN apk add --no-cache python3 make g++
-
+FROM node:22-alpine AS deps
 WORKDIR /app
-
+# better-sqlite3 requires native build tools
+RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 RUN npm ci
 
+FROM node:22-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache python3 make g++
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Generate Prisma client and build Next.js
+# DATABASE_URL is only needed to satisfy prisma.config.ts during 'prisma generate'
+# (it does not connect to a database at build time)
+ENV DATABASE_URL="file:/app/data/library.db"
 RUN npm run build
 
-# Stage 2: Production image
-FROM node:20-alpine AS runner
-
+FROM node:22-alpine AS runner
+WORKDIR /app
+# Needed to rebuild native modules (better-sqlite3) for this image
 RUN apk add --no-cache python3 make g++
 
-WORKDIR /app
-
 ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Copy built output
+# Standalone Next.js app
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Prisma schema, migrations, config and full node_modules (needed for CLI + seed)
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
 
 # Startup script
 COPY --from=builder /app/start.sh ./start.sh
-RUN sed -i 's/\r//' start.sh && chmod +x start.sh
+RUN chmod +x start.sh
+
+RUN mkdir -p /app/data
+RUN npm install -g tsx
 
 EXPOSE 3000
 
-CMD ["./start.sh"]
+CMD ["sh", "-c", "echo 'Running database migrations...' && npx prisma db push && node server.js"]

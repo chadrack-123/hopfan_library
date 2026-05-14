@@ -5,7 +5,7 @@ echo "==> Running database migrations..."
 npx prisma db push --skip-generate
 
 echo "==> Seeding admin account..."
-npx ts-node --esm prisma/seed.ts
+npx prisma db seed
 
 echo "==> Starting Next.js..."
-exec npm start
+exec node server.js
