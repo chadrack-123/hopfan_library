@@ -126,6 +126,7 @@ export default function NotificationsPage() {
           <div className="px-6 py-3 bg-red-50 border-b border-red-100">
             <h3 className="font-semibold text-red-800 text-sm">Overdue Books</h3>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -146,6 +147,7 @@ export default function NotificationsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -155,6 +157,7 @@ export default function NotificationsPage() {
           <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-100">
             <h3 className="font-semibold text-yellow-800 text-sm">Due Within 2 Days</h3>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -175,6 +178,7 @@ export default function NotificationsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -185,6 +189,7 @@ export default function NotificationsPage() {
             <CheckCircleIcon className="w-4 h-4 text-green-700" />
             <h3 className="font-semibold text-green-800 text-sm">Notification Results</h3>
           </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
@@ -203,6 +208,7 @@ export default function NotificationsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

@@ -408,7 +408,82 @@ function LoansInner() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+      {/* ── Mobile card list (< md) ──────────────────────────────── */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />
+          </div>
+        ) : loans.length === 0 ? (
+          <p className="text-center py-12 text-sm text-gray-400">No loans found</p>
+        ) : loans.map((loan) => (
+          <div
+            key={loan.id}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 cursor-pointer active:bg-gray-50"
+            onClick={() => setViewLoan(loan)}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-800 leading-snug truncate">{loan.book.title}</p>
+                <p className="text-xs text-gray-500">{loan.book.author}</p>
+              </div>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[loan.status]}`}>
+                {loan.status}
+              </span>
+            </div>
+            <div className="mt-2 text-sm text-gray-700">
+              <span className="font-medium">{loan.member.name}</span>
+              <span className="text-gray-400 text-xs ml-1 font-mono">{loan.member.memberCode}</span>
+            </div>
+            <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+              <span>Due: <span className={loan.status === "OVERDUE" ? "text-red-600 font-semibold" : "text-gray-700"}>{format(new Date(loan.dueDate), "dd MMM yyyy")}</span></span>
+              {loan.fine > 0 && (
+                <span className={loan.finePaid ? "text-green-600" : "text-red-600 font-semibold"}>
+                  R{loan.fine.toFixed(2)} {loan.finePaid ? "(paid)" : "(unpaid)"}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1 mt-3 pt-3 border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
+              {loan.status === "ACTIVE" && (
+                <>
+                  <button onClick={() => loanAction(loan.id, "return")} disabled={!!actionLoading} title="Return book" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-green-50 text-green-700 text-xs font-medium disabled:opacity-40">
+                    <ArrowUturnLeftIcon className="w-4 h-4" /> Return
+                  </button>
+                  <button onClick={() => loanAction(loan.id, "renew")} disabled={!!actionLoading || loan.renewalCount >= 2} title={`Renew (${2 - loan.renewalCount} left)`} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-50 text-blue-600 text-xs font-medium disabled:opacity-40">
+                    <ArrowPathIcon className="w-4 h-4" /> Renew
+                  </button>
+                  <button onClick={() => sendNotification(loan.id, "DUE_REMINDER")} disabled={!!actionLoading} title="Send due reminder" className="p-2 rounded-lg bg-purple-50 text-purple-600 disabled:opacity-40">
+                    <BellIcon className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+              {loan.status === "OVERDUE" && (
+                <>
+                  <button onClick={() => loanAction(loan.id, "return")} disabled={!!actionLoading} title="Mark as returned" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-green-50 text-green-700 text-xs font-medium disabled:opacity-40">
+                    <ArrowUturnLeftIcon className="w-4 h-4" /> Return
+                  </button>
+                  <button onClick={() => sendNotification(loan.id, "OVERDUE_ALERT")} disabled={!!actionLoading} title="Send overdue alert" className="p-2 rounded-lg bg-red-50 text-red-600 disabled:opacity-40">
+                    <BellIcon className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+              {loan.status === "RETURNED" && loan.fine > 0 && !loan.finePaid && (
+                <button onClick={() => loanAction(loan.id, "pay_fine")} disabled={!!actionLoading} title="Mark fine as paid" className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-yellow-50 text-yellow-700 text-xs font-medium disabled:opacity-40">
+                  <CurrencyDollarIcon className="w-4 h-4" /> Mark Paid
+                </button>
+              )}
+              {loan.status === "RETURNED" && (
+                <button onClick={() => requestFeedback(loan.id)} disabled={!!actionLoading || feedbackSent.has(loan.id)} title={feedbackSent.has(loan.id) ? "Feedback request sent" : "Request book feedback"} className={`p-2 rounded-lg disabled:opacity-40 ${feedbackSent.has(loan.id) ? "bg-gray-50 text-gray-300" : "bg-purple-50 text-purple-600"}`}>
+                  <ChatBubbleLeftRightIcon className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table (md+) ──────────────────────────────────── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />

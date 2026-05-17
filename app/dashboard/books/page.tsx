@@ -274,7 +274,62 @@ export default function BooksPage() {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ── Mobile card list (< md) ──────────────────────────────── */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />
+          </div>
+        ) : books.length === 0 ? (
+          <p className="text-center py-12 text-sm text-gray-400">No books found</p>
+        ) : books.map((book) => (
+          <div
+            key={book.id}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 cursor-pointer active:bg-gray-50"
+            onClick={() => setViewBook(book)}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-gray-800 leading-snug">{book.title}</p>
+                <p className="text-sm text-gray-500 mt-0.5">{book.author}</p>
+                {book.category && (
+                  <span className="inline-block mt-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                    {book.category}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => setModal({ open: true, book })}
+                  className="p-2 rounded-lg hover:bg-blue-50 text-blue-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteBook(book.id)}
+                  className="p-2 rounded-lg hover:bg-red-50 text-red-600"
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-xs text-gray-500">
+                <span className="font-medium text-gray-700">{book.totalCopies}</span> total
+              </span>
+              <span className={`text-xs font-semibold ${book.available === 0 ? "text-red-600" : "text-green-600"}`}>
+                {book.available} available
+              </span>
+              {book.isbn && (
+                <span className="text-xs text-gray-400 font-mono ml-auto">{book.isbn}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table (md+) ──────────────────────────────────── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />

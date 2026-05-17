@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "HOPFAN Library",
   description: "House of Prayer for all Nations — Library Management System",
   icons: {
-    icon: "/hopfan-logo.PNG",
+    icon: "/icon.svg",
     apple: "/hopfan-logo.PNG",
   },
 };

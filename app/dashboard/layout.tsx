@@ -6,7 +6,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <ToastProvider>
       <div className="flex h-full min-h-screen">
         <Sidebar />
-        <main className="ml-56 flex-1 p-8 overflow-auto">{children}</main>
+        <main className="lg:ml-56 flex-1 p-4 sm:p-6 lg:p-8 overflow-auto pb-20 lg:pb-8">{children}</main>
       </div>
     </ToastProvider>
   );

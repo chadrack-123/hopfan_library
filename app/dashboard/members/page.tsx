@@ -439,7 +439,53 @@ export default function MembersPage() {
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* ── Mobile card list (< md) ──────────────────────────────── */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />
+          </div>
+        ) : members.length === 0 ? (
+          <p className="text-center py-12 text-sm text-gray-400">No members found</p>
+        ) : members.map((m) => (
+          <div
+            key={m.id}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 cursor-pointer active:bg-gray-50"
+            onClick={() => setViewMember(m)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-base font-bold text-blue-700 flex-shrink-0">
+                {m.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-gray-800 leading-snug">{m.name}</p>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    {m.active ? "Active" : "Inactive"}
+                  </span>
+                </div>
+                <p className="text-xs font-mono text-gray-400">{m.memberCode}</p>
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setModal({ open: true, member: m })} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600">
+                  <PencilSquareIcon className="w-4 h-4" />
+                </button>
+                <button onClick={() => deleteMember(m.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-600">
+                  <TrashIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="mt-2 space-y-0.5 pl-[52px]">
+              {m.email && <p className="text-xs text-gray-500">{m.email}</p>}
+              {m.phone && <p className="text-xs text-gray-500">{m.phone}</p>}
+              <p className="text-xs text-gray-400">{m._count.loans} loan{m._count.loans !== 1 ? "s" : ""} · Joined {format(new Date(m.createdAt), "dd MMM yyyy")}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table (md+) ──────────────────────────────────── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-700 border-t-transparent" />

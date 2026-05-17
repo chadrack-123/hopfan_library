@@ -37,6 +37,77 @@ function StarDisplay({ rating }: { rating: number | null }) {
   );
 }
 
+function FeedbackCard({ fb, onResend }: { fb: FeedbackEntry; onResend: (loanId: string) => Promise<void> }) {
+  const [expanded, setExpanded] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  async function handleResend(e: React.MouseEvent) {
+    e.stopPropagation();
+    setResending(true);
+    await onResend(fb.loanId);
+    setResending(false);
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="p-4 cursor-pointer" onClick={() => setExpanded((v) => !v)}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-gray-800 leading-snug truncate">{fb.loan.book.title}</p>
+            <p className="text-xs text-gray-400">{fb.loan.book.author}</p>
+            <p className="text-sm text-gray-700 mt-1">{fb.loan.member.name}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {fb.submittedAt ? (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">Submitted</span>
+            ) : (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">Pending</span>
+            )}
+            {expanded ? <ChevronUpIcon className="w-4 h-4 text-gray-400" /> : <ChevronDownIcon className="w-4 h-4 text-gray-400" />}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 mt-2">
+          <StarDisplay rating={fb.rating} />
+          {fb.wouldRecommend === true && <span className="text-xs text-green-600">👍 Recommends</span>}
+          {fb.wouldRecommend === false && <span className="text-xs text-red-500">👎 Doesn&apos;t recommend</span>}
+        </div>
+      </div>
+      {expanded && (
+        <div className="px-4 pb-4 border-t border-purple-50 bg-purple-50 space-y-3 pt-3">
+          {fb.review ? (
+            <div>
+              <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">What they thought</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap bg-white rounded-lg p-3 border border-purple-100">{fb.review}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400 italic">No review provided</p>
+          )}
+          {fb.learnings && (
+            <div>
+              <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">What they learned</p>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap bg-white rounded-lg p-3 border border-purple-100">{fb.learnings}</p>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3 text-xs text-gray-400">
+            <span>Borrowed: {format(new Date(fb.loan.borrowedAt), "dd MMM yyyy")}</span>
+            {fb.loan.returnedAt && <span>Returned: {format(new Date(fb.loan.returnedAt), "dd MMM yyyy")}</span>}
+          </div>
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 text-xs font-medium disabled:opacity-40"
+          >
+            {resending
+              ? <span className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin block" />
+              : <PaperAirplaneIcon className="w-4 h-4" />}
+            {fb.submittedAt ? "Re-send request" : "Send request"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FeedbackRow({ fb, onResend }: { fb: FeedbackEntry; onResend: (loanId: string) => Promise<void> }) {
   const [expanded, setExpanded] = useState(false);
   const [resending, setResending] = useState(false);
@@ -230,7 +301,28 @@ export default function FeedbackPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+      {/* ── Mobile card list (< md) ──────────────────────────────── */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="flex items-center justify-center h-40">
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <ChatBubbleLeftRightIcon className="w-12 h-12 mb-3 opacity-30" />
+            <p className="text-sm text-center">
+              {feedback.length === 0
+                ? "No feedback requests yet. Use the Loans page to request feedback from members."
+                : "No feedback entries match this filter."}
+            </p>
+          </div>
+        ) : filtered.map((fb) => (
+          <FeedbackCard key={fb.id} fb={fb} onResend={resendFeedback} />
+        ))}
+      </div>
+
+      {/* ── Desktop table (md+) ──────────────────────────────────── */}
+      <div className="hidden md:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="animate-spin rounded-full h-8 w-8 border-4 border-purple-600 border-t-transparent" />

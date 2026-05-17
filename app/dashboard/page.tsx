@@ -60,9 +60,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-blue-900">Welcome back</h1>
-        <p className="text-gray-500 mt-1">House of Prayer for all Nations — Library Overview</p>
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-900">Welcome back</h1>
+        <p className="text-gray-500 mt-1 text-sm">House of Prayer for all Nations — Library Overview</p>
       </div>
 
       {/* Stats grid */}
@@ -97,15 +97,15 @@ export default function DashboardPage() {
             <p className="px-6 py-8 text-sm text-gray-400 text-center">No loans yet</p>
           )}
           {data.recentLoans.map((loan) => (
-            <div key={loan.id} className="px-6 py-4 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800 text-sm">{loan.book.title}</p>
+            <div key={loan.id} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-800 text-sm truncate">{loan.book.title}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   Borrowed by <span className="font-medium">{loan.member.name}</span> ·{" "}
                   {format(new Date(loan.borrowedAt), "dd MMM yyyy")}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-shrink-0">
                 <p className="text-xs text-gray-400">Due {format(new Date(loan.dueDate), "dd MMM yyyy")}</p>
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusColors[loan.status]}`}>
                   {loan.status}
