@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { PlusIcon, MagnifyingGlassIcon, PencilSquareIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useToast } from "@/app/dashboard/ToastProvider";
 import { format } from "date-fns";
@@ -12,6 +12,7 @@ interface Member {
   address: string | null;
   nextOfKin: string | null;
   nextOfKinPhone: string | null;
+  birthday: string | null;
   memberCode: string;
   active: boolean;
   createdAt: string;
@@ -20,25 +21,25 @@ interface Member {
 
 // ─── Country codes ─────────────────────────────────────────────────────────────
 const COUNTRIES = [
-  { flag: "🇿🇦", name: "South Africa", dial: "+27" },
-  { flag: "🇿🇼", name: "Zimbabwe", dial: "+263" },
-  { flag: "🇿🇲", name: "Zambia", dial: "+260" },
-  { flag: "🇲🇿", name: "Mozambique", dial: "+258" },
-  { flag: "🇧🇼", name: "Botswana", dial: "+267" },
-  { flag: "🇳🇦", name: "Namibia", dial: "+264" },
-  { flag: "🇲🇼", name: "Malawi", dial: "+265" },
-  { flag: "🇹🇿", name: "Tanzania", dial: "+255" },
-  { flag: "🇰🇪", name: "Kenya", dial: "+254" },
-  { flag: "🇺🇬", name: "Uganda", dial: "+256" },
-  { flag: "🇬🇧", name: "United Kingdom", dial: "+44" },
-  { flag: "🇺🇸", name: "United States", dial: "+1" },
-  { flag: "🇨🇦", name: "Canada", dial: "+1" },
-  { flag: "🇦🇺", name: "Australia", dial: "+61" },
-  { flag: "🇩🇪", name: "Germany", dial: "+49" },
-  { flag: "🇳🇱", name: "Netherlands", dial: "+31" },
-  { flag: "🇵🇹", name: "Portugal", dial: "+351" },
-  { flag: "🇨🇳", name: "China", dial: "+86" },
-  { flag: "🇮🇳", name: "India", dial: "+91" },
+  { code: "za", name: "South Africa", dial: "+27" },
+  { code: "zw", name: "Zimbabwe", dial: "+263" },
+  { code: "zm", name: "Zambia", dial: "+260" },
+  { code: "mz", name: "Mozambique", dial: "+258" },
+  { code: "bw", name: "Botswana", dial: "+267" },
+  { code: "na", name: "Namibia", dial: "+264" },
+  { code: "mw", name: "Malawi", dial: "+265" },
+  { code: "tz", name: "Tanzania", dial: "+255" },
+  { code: "ke", name: "Kenya", dial: "+254" },
+  { code: "ug", name: "Uganda", dial: "+256" },
+  { code: "gb", name: "United Kingdom", dial: "+44" },
+  { code: "us", name: "United States", dial: "+1" },
+  { code: "ca", name: "Canada", dial: "+1" },
+  { code: "au", name: "Australia", dial: "+61" },
+  { code: "de", name: "Germany", dial: "+49" },
+  { code: "nl", name: "Netherlands", dial: "+31" },
+  { code: "pt", name: "Portugal", dial: "+351" },
+  { code: "cn", name: "China", dial: "+86" },
+  { code: "in", name: "India", dial: "+91" },
 ];
 
 // ─── Parse stored E.164 number into {dialCode, local} ─────────────────────────
@@ -64,12 +65,25 @@ function PhoneInput({
   const parsed = parsePhone(value);
   const [dialCode, setDialCode] = useState(parsed.dialCode);
   const [local, setLocal] = useState(parsed.local);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const current = COUNTRIES.find((c) => c.dial === dialCode) ?? COUNTRIES[0];
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   function handleDialChange(d: string) {
     setDialCode(d);
     onChange(d + local);
+    setOpen(false);
   }
   function handleLocalChange(l: string) {
     // strip non-digit, spaces, hyphens
@@ -81,18 +95,36 @@ function PhoneInput({
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <div className={`flex border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 ${error ? "border-red-400" : "border-gray-300"}`}>
-        <select
-          value={dialCode}
-          onChange={(e) => handleDialChange(e.target.value)}
-          className="bg-gray-50 border-r border-gray-300 px-2 py-2 text-sm focus:outline-none"
-        >
-          {COUNTRIES.map((c) => (
-            <option key={c.name} value={c.dial}>
-              {c.flag} {c.dial}
-            </option>
-          ))}
-        </select>
+      <div className={`flex border rounded-lg focus-within:ring-2 focus-within:ring-blue-500 ${error ? "border-red-400" : "border-gray-300"}`}>
+        <div ref={dropdownRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            className="flex items-center gap-1 bg-gray-50 border-r border-gray-300 px-2 py-2 text-sm focus:outline-none hover:bg-gray-100 h-full rounded-l-lg"
+          >
+            <img src={`https://flagcdn.com/20x15/${current.code}.png`} alt={current.name} className="w-5 h-auto" />
+            <span className="text-gray-600">{current.dial}</span>
+            <span className="text-gray-400 text-xs">▾</span>
+          </button>
+          {open && (
+            <div className="absolute left-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-56 overflow-y-auto">
+              {COUNTRIES.map((c) => (
+                <button
+                  key={c.name}
+                  type="button"
+                  onClick={() => handleDialChange(c.dial)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-blue-50 text-left ${
+                    c.dial === dialCode ? "bg-blue-50 font-medium" : ""
+                  }`}
+                >
+                  <img src={`https://flagcdn.com/20x15/${c.code}.png`} alt={c.name} className="w-5 h-auto flex-shrink-0" />
+                  <span className="flex-1 truncate text-gray-700">{c.name}</span>
+                  <span className="text-gray-400">{c.dial}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <input
           type="tel"
           value={local}
@@ -134,6 +166,7 @@ function MemberModal({
     address: member?.address ?? "",
     nextOfKin: member?.nextOfKin ?? "",
     nextOfKinPhone: member?.nextOfKinPhone ?? "",
+    birthday: member?.birthday ? member.birthday.slice(0, 10) : "",
     active: member?.active ?? true,
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -233,7 +266,19 @@ function MemberModal({
             <input
               value={form.address}
               onChange={(e) => setForm({ ...form, address: e.target.value })}
+              placeholder="Enter address"
               className={inputCls("address")}
+            />
+          </div>
+
+          {/* Birthday */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Birthday</label>
+            <input
+              type="date"
+              value={form.birthday}
+              onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+              className={inputCls("birthday")}
             />
           </div>
 
@@ -350,6 +395,12 @@ function MemberDetailPanel({
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Address</p>
                 <p className="text-gray-700">{member.address}</p>
+              </div>
+            )}
+            {member.birthday && (
+              <div>
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1">Birthday</p>
+                <p className="text-gray-700">{format(new Date(member.birthday), "dd MMMM yyyy")}</p>
               </div>
             )}
             <div>

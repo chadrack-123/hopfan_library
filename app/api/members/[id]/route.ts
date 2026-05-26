@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   const body = await req.json();
-  const { name, email, phone, address, active, nextOfKin, nextOfKinPhone } = body;
+  const { name, email, phone, address, active, nextOfKin, nextOfKinPhone, birthday } = body;
 
   const member = await prisma.member.update({
     where: { id },
@@ -39,6 +39,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       active,
       nextOfKin: nextOfKin?.trim() || null,
       nextOfKinPhone: nextOfKinPhone?.trim() || null,
+      birthday: birthday ? new Date(birthday) : null,
     },
   });
 
