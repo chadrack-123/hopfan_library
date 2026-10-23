@@ -3,26 +3,64 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import bcrypt from "bcryptjs";
 
-const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
-const adapter = new PrismaBetterSqlite3({ url });
-const prisma = new PrismaClient({ adapter });
+const REQUIRED_ADMIN_ENV = ["ADMIN_NAME", "ADMIN_EMAIL", "ADMIN_PASSWORD"] as const;
 
-async function main() {
-  const hashedPassword = await bcrypt.hash("Admin@123", 12);
+function readAdminConfig() {
+  const missing = REQUIRED_ADMIN_ENV.filter((name) => !process.env[name]?.trim());
 
-  const admin = await prisma.admin.upsert({
-    where: { email: "admin@hopfan.church" },
-    update: {},
-    create: {
-      name: "Library Admin",
-      email: "admin@hopfan.church",
-      password: hashedPassword,
-    },
-  });
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required administrator environment variable(s): ${missing.join(", ")}. ` +
+        "No database changes were made."
+    );
+  }
 
-  console.log("Admin seeded:", admin.email);
+  const name = process.env.ADMIN_NAME!.trim();
+  const email = process.env.ADMIN_EMAIL!.trim().toLowerCase();
+  const password = process.env.ADMIN_PASSWORD!;
+
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
+    throw new Error("ADMIN_EMAIL must be a valid email address. No database changes were made.");
+  }
+
+  if (password.length < 12) {
+    throw new Error("ADMIN_PASSWORD must contain at least 12 characters. No database changes were made.");
+  }
+
+  const normalizedPassword = password.trim().toLowerCase();
+  if (
+    normalizedPassword.startsWith("<") ||
+    normalizedPassword.includes("replace-with") ||
+    normalizedPassword.includes("change-me") ||
+    normalizedPassword.includes("example-password")
+  ) {
+    throw new Error("ADMIN_PASSWORD is still a placeholder. No database changes were made.");
+  }
+
+  return { name, email, password };
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+async function main() {
+  const { name, email, password } = readAdminConfig();
+  const url = process.env.DATABASE_URL ?? "file:./prisma/dev.db";
+  const adapter = new PrismaBetterSqlite3({ url });
+  const prisma = new PrismaClient({ adapter });
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const admin = await prisma.admin.upsert({
+      where: { email },
+      update: { name, password: hashedPassword },
+      create: { name, email, password: hashedPassword },
+    });
+
+    console.log("Administrator seeded:", admin.email);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+main().catch((error: unknown) => {
+  console.error("Administrator seed failed:", error instanceof Error ? error.message : "Unknown error");
+  process.exitCode = 1;
+});
